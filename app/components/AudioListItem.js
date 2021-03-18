@@ -1,5 +1,5 @@
 import React from 'react';
-import {Text, View, Alert, StyleSheet, Dimensions} from 'react-native';
+import {Text, View, Alert, StyleSheet, Dimensions,TouchableWithoutFeedback} from 'react-native';
 import {Entypo} from '@expo/vector-icons';
 import color from '../misc/color';
 
@@ -26,10 +26,11 @@ const convertTime = minutes =>{
     }
 };
 
-const AudioListItem = ({title, duration, onOptionPress})=>{
+const AudioListItem = ({title, duration, onOptionPress,onAudioPress})=>{
     return(
         <>
         <View style={styles.container}>
+        <TouchableWithoutFeedback onPress={onAudioPress}>
             <View style={styles.leftContainer}>
                 <View style={styles.thumbnail}>
                     <Text style={styles.thumbnailText}>{getThumbnailText(title)}</Text>
@@ -42,12 +43,15 @@ const AudioListItem = ({title, duration, onOptionPress})=>{
                     </Text>
                 </View>
             </View>
+            </TouchableWithoutFeedback>
             <View style={styles.rightContainer}>
                 <Entypo 
                 onPress={onOptionPress}
                 name="dots-three-vertical" 
                 size={20} 
-                color={color.FONT_MEDIUM}/>
+                color={color.FONT_MEDIUM}
+                style={{padding:10 }}
+                />
 
             </View>
         </View>
@@ -73,7 +77,8 @@ const styles = StyleSheet.create({
         flexBasis:50,
         height:50,
         alignItems:'center',
-        justifyContent:'center'
+        justifyContent:'center',
+       
         
 
     },
