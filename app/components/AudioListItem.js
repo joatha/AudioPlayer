@@ -26,14 +26,31 @@ const convertTime = minutes =>{
     }
 };
 
-const AudioListItem = ({title, duration, onOptionPress,onAudioPress})=>{
+const renderPlayPauseIcon = isPlaying =>{
+    if(isPlaying) return <Entypo name="controller-paus" size={24} color={color.ACTIVE_FONT}/>
+    return <Entypo name="controller-play" size={24} color={color.ACTIVE_FONT}/>
+}
+const AudioListItem = ({
+    title, 
+    duration, 
+    onOptionPress,
+    onAudioPress, 
+    isPlaying,
+    activeListItem,
+
+})=>{
+
     return(
         <>
         <View style={styles.container}>
         <TouchableWithoutFeedback onPress={onAudioPress}>
             <View style={styles.leftContainer}>
-                <View style={styles.thumbnail}>
-                    <Text style={styles.thumbnailText}>{getThumbnailText(title)}</Text>
+                <View style={[styles.thumbnail, {backgroundColor: activeListItem ? color.ACTIVE_BG: color.FONT_LIGHT}]}>
+                    <Text style={styles.thumbnailText}>
+                        {activeListItem 
+                        ? renderPlayPauseIcon(isPlaying) 
+                        : getThumbnailText(title) }
+                    </Text>
                 </View>
                 <View style={styles.titleContainer} >
                     <Text numberOfLines={1} style={styles.title}>
