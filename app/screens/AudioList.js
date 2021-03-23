@@ -8,6 +8,7 @@ import OptionModal from '../components/OptionModal';
 import {Audio} from 'expo-av';
 import {play,pause,resume,playNext} from '../misc/AudioController';
 
+
 export class AudioList extends Component{
     static contextType = AudioContext;
 
@@ -34,21 +35,64 @@ export class AudioList extends Component{
                     dim.height =0;
             }
     })
+
+    onPlaybackStatusUpdate = async (playbackStatus) =>{
+        if(playbackStatus.isLoaded && playbackStatus.isPlaying){
+            this.context.updtateState(this.context, {
+                playbackPosition: playbackStatus.positionMillis,
+                playbackDuration: playbackStatus.durationMillis,
+            });
+        }
+        if(playbackStatus.didJustFinish){
+            const nextAudioIndex = this.context.currentAudioIndex + 1;
+
+            //there is no next audio to play or the current audio is the last
+            if(nextAudioIndex >= this.context.totalAudioCount){
+                this.context.playbackObj.unloadAsync();
+               return this.context.updtateState(this.context, {
+                    soundObg: null,
+                    currentAudio: this.context.audioFiles[0],
+                    isPlaying: false,
+                    currentAudioIndex:0,
+                    playbackPosition: null,
+                    playbackDuration:null,
+                });
+            }
+            // otherwise we want to select the netx audio
+            
+            const audio = this.context.audioFiles[nextAudioIndex];
+            const status= await playNext(this.context.playbackObj, audio.uri);
+            this.context.updtateState(this.context, {
+                soundObg: status,
+                currentAudio: audio,
+                isPlaying: true,
+                currentAudioIndex: nextAudioIndex,
+            })
+        }
+     
+
+
+    }
     handleAudioPress= async audio =>{
-        const {soundObg, playbackObj, currentAudio,updtateState,audioFiles} = this.context;
+        const {soundObg,
+             playbackObj, 
+             currentAudio,
+             updtateState,
+             audioFiles
+            } = this.context;
 
         if(soundObg === null){
-            const playbackObj=  new Audio.Sound()
-            const status =await play(playbackObj, audio.uri)
+            const playbackObj =  new Audio.Sound()
+            const status = await play(playbackObj, audio.uri)
             const index = audioFiles.indexOf(audio)
-            return updtateState(this.context,{
+            updtateState(this.context,{
                 currentAudio:audio,
                 playbackObj: playbackObj, 
                 soundObg: status,
                 isPlaying: true,
                 currentAudioIndex:index
-            } )
-                        
+            } );
+            return playbackObj.setOnPlaybackStatusUpdate(this.onPlaybackStatusUpdate);
         }
         if(
             soundObg.isLoaded &&

@@ -3,7 +3,7 @@ import {Text, View, Alert} from 'react-native';
 import * as MediaLibrary from 'expo-media-library';
 import {DataProvider} from 'recyclerlistview';
 
-export const AudioContext = createContext()
+export const AudioContext = createContext();
 export class AudioProvider extends Component{
  
     constructor(props){
@@ -16,8 +16,11 @@ export class AudioProvider extends Component{
             soundObg:null,
             currentAudio:{},
             isPlaying: false,
-            currentAudioIndex:null
+            currentAudioIndex:null,
+            playbackPosition: null,
+            playbackDuration: null,
         };
+        this.totalAudioCount = 0
     }
 
     persmissionAllert = ()=>{
@@ -32,17 +35,17 @@ export class AudioProvider extends Component{
         ]);
     };
     getAudioFiles = async ()=>{
-        const {dataProvider, audioFiles} = this.state
-       let media = await MediaLibrary.
-       getAssetsAsync({
-         mediaType:'audio',
+       const {dataProvider, audioFiles} = this.state
+       let media = await MediaLibrary.getAssetsAsync({
+       mediaType:'audio',
            
         });
         media = await MediaLibrary.getAssetsAsync({
             mediaType:'audio',
             first:media.totalCount,
-            
-         });
+        });
+        this.totalAudioCount = media.totalCount
+
          this.setState({
             ...this.state,
             dataProvider: dataProvider.cloneWithRows([
@@ -101,7 +104,9 @@ export class AudioProvider extends Component{
               soundObg,
               currentAudio,
               isPlaying,
-              currentAudioIndex
+              currentAudioIndex,
+              playbackPosition,
+              playbackDuration,
             } = this.state
         if(permissionError){
             return(
@@ -126,7 +131,11 @@ export class AudioProvider extends Component{
                 currentAudio, 
                 isPlaying,
                 currentAudioIndex,
+                totalAudioCount: this.totalAudioCount,
+                playbackPosition,
+                playbackDuration,
                 updtateState: this.updtateState,
+            
                 }}>
                 {this.props.children}
             </AudioContext.Provider>
