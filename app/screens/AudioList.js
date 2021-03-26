@@ -7,6 +7,7 @@ import Screen from '../components/Screen';
 import OptionModal from '../components/OptionModal';
 import {Audio} from 'expo-av';
 import {play,pause,resume,playNext} from '../misc/AudioController';
+import { storeAudioForNextOpening } from '../misc/helper';
 
 
 export class AudioList extends Component{
@@ -36,7 +37,7 @@ export class AudioList extends Component{
             }
     })
 
-    onPlaybackStatusUpdate = async (playbackStatus) =>{
+    /*onPlaybackStatusUpdate = async (playbackStatus) =>{
         if(playbackStatus.isLoaded && playbackStatus.isPlaying){
             this.context.updtateState(this.context, {
                 playbackPosition: playbackStatus.positionMillis,
@@ -49,7 +50,7 @@ export class AudioList extends Component{
             //there is no next audio to play or the current audio is the last
             if(nextAudioIndex >= this.context.totalAudioCount){
                 this.context.playbackObj.unloadAsync();
-               return this.context.updtateState(this.context, {
+                this.context.updtateState(this.context, {
                     soundObg: null,
                     currentAudio: this.context.audioFiles[0],
                     isPlaying: false,
@@ -57,6 +58,7 @@ export class AudioList extends Component{
                     playbackPosition: null,
                     playbackDuration:null,
                 });
+                return await storeAudioForNextOpening(this.context.audioFiles[0], 0);
             }
             // otherwise we want to select the netx audio
             
@@ -67,12 +69,13 @@ export class AudioList extends Component{
                 currentAudio: audio,
                 isPlaying: true,
                 currentAudioIndex: nextAudioIndex,
-            })
+            });
+            await storeAudioForNextOpening(audio, nextAudioIndex)
         }
      
 
 
-    }
+    }*/
     handleAudioPress= async audio =>{
         const {soundObg,
              playbackObj, 
@@ -92,7 +95,8 @@ export class AudioList extends Component{
                 isPlaying: true,
                 currentAudioIndex:index
             } );
-            return playbackObj.setOnPlaybackStatusUpdate(this.onPlaybackStatusUpdate);
+            playbackObj.setOnPlaybackStatusUpdate(this.context.onPlaybackStatusUpdate);
+            return storeAudioForNextOpening(audio, index);
         }
         if(
             soundObg.isLoaded &&
@@ -116,13 +120,18 @@ export class AudioList extends Component{
         if(soundObg.isLoaded && currentAudio.id !== audio.id){
             const status = await playNext(playbackObj, audio.uri)
             const index = audioFiles.indexOf(audio)
-            return updtateState(this.context,{
+            updtateState(this.context,{
                 currentAudio:audio,               
                 soundObg: status,
                 isPlaying: true,
-                currentAudioIndex: index
+                currentAudioIndex: index,
             });
+            return storeAudioForNextOpening(audio, index);
         }
+    }
+    componentDidMount(){
+        this.context.loadaPreviousAudio();
+
     }
     
     rowRenderer = (type, item, index, extendedState)=>{
@@ -145,6 +154,8 @@ export class AudioList extends Component{
         
             <AudioContext.Consumer>
             {({dataProvider, isPlaying})=>{
+                if(!dataProvider._data.length) return null;
+
                 return(
                 <Screen > 
                     <RecyclerListView
@@ -155,7 +166,9 @@ export class AudioList extends Component{
                  />
                  <OptionModal 
                  onPlayPress={()=> console.log('Playing audio')}
-                 onPlayListPress={()=>console.log('Adicionado a playlist')}
+                 onPlayListPress={()=>{
+                     this.props.navigation.navigate('PlayList')
+                 }}
                     currentItem={this.currentItem}
                     onClose={() => 
                         this.setState({...this.state, OptionModalVisible:false})
